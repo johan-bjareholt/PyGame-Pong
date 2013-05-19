@@ -1,5 +1,6 @@
 PyGame-Pong
 ===========
+
 #### Summary
 A Pong game with multiplayer support made in Python with PyGame
 
@@ -9,20 +10,34 @@ required libraries:
 	PyGame
 	PyYAML
 
+###How to run
+This is how to run it from source
+
+####Prepare
+Install all of it's libraries
+```
+pip install yaml
+pip install pygame
+```
+
+####Start
+Simply run the client.py
+
+
 ###How to Compile
 If you want to compile this package by some wierd reason, here's how!
 
 ####Mac
-Extra dependencies needed: Py2app
+Libs needed: Py2app
 cd to main directory and run this command:
-`python2 mac_setup.py py2app`
+`python2 mac_compile.py py2app`
 
 ####Windows
-Extra dependencies needed: Py2exe
+Libs needed: Py2exe
 cd to main directory and run this command:
-`python2 win_setup.py py2exe`
+`python2 win_compile.py py2exe`
 
 ####Linux:
-Extra dependencies needed: PyInstaller
+Libs needed: PyInstaller
 cd to main directory and run this command:
-`pyinstaller linux_setup.py`
+`sh linux_compile.sh`
