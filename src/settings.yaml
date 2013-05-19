@@ -1,0 +1,23 @@
+client:
+    game:
+        hippie: False
+        sensitivity: 12
+    screen:
+        resolution:     # Please do not change resolution!
+            - 1200
+            - 700
+        fullscreen: False
+    audio:
+        enabled: True
+        volume: 7       # Range from 1 to 10 with decimals if you so choose
+    host:
+        ip: "ngenia.net"
+        port: 10000
+    user:
+        name: "Johan"
+        password: ""
+        random: True     # Adds a random number after the username
+
+server:
+    ip: "0.0.0.0"
+    port: 10000
