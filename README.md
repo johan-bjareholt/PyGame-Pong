@@ -16,7 +16,7 @@ required libraries:
 This is how to run it from source
 
 ####Prepare
-Install all of it's libraries
+Install python2.7 and these libraries
 ```
 pip install yaml
 pip install pygame
@@ -24,7 +24,7 @@ pip install pygame
 
 
 ####Start
-Simply run the client.py
+Simply run the client.py from the src folder
 
 
 
@@ -34,17 +34,17 @@ If you want to compile this package by some wierd reason, here's how!
 ####Mac
 Libs needed: Py2app
 
-cd to main directory and run this command:
+cd to src directory and run this command:
 `python2 mac_compile.py py2app`
 
 ####Windows
 Libs needed: Py2exe
 
-cd to main directory and run this command:
+cd to src directory and run this command:
 `python2 win_compile.py py2exe`
 
 ####Linux:
 Libs needed: PyInstaller
 
-cd to main directory and run this command:
+cd to src directory and run this command:
 `sh linux_compile.sh`
