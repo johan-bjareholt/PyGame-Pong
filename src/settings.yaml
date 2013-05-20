@@ -14,9 +14,8 @@ client:
         ip: "ngenia.net"
         port: 10000
     user:
-        name: "Johan"
+        name: ""
         password: ""
-        random: True     # Adds a random number after the username
 
 server:
     ip: "0.0.0.0"

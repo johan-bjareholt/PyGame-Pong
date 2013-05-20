@@ -67,7 +67,7 @@ class Main():
             else:
                 input.inGame()
                 self.gameinput[self.mode]()
-                if self.hippieMode:
+                if self.settings['game']['hippie']:
                     gfx.game.ball.hippie()
                 if gfx.game.playing:
                     if self.mode == "singleplayer":
@@ -89,17 +89,13 @@ class Main():
                              'host': {'ip': 'ngenia.net', 'port': 10000},
                              'audio': {'volume': 7, 'enabled': True},
                              'game': {'sensitivity': 12, 'hippie': False},
-                             'user': {'password': '',
-                             'random': True, 'name': 'Johan'}}
+                             'user': {'password': '', 'name': ''}}
         else:
             settings_file = file(self.cwd + "/settings.yaml", 'r')
             self.settings = yaml.load(settings_file)['client']
             logging.info(self.settings)
         if self.settings['game']['hippie']:
-            self.hippieMode = True
             logging.info("HIPPIE!")
-        else:
-            self.hippieMode = False
 
     def load(self):
         if android:
