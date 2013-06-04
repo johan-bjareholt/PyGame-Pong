@@ -140,7 +140,7 @@ class PauseMenu(Entity):
         self.draw()
 
     def loadSurface(self):
-        self.leaveButton = Button(50, 100, 200, 100, (255, 255, 255), text="Leave game")
+        self.leaveButton = Button(50, 100, 200, 100, (255, 255, 255), text="Leave")
 
     def draw(self):
         self.blit(self.leaveButton, (self.leaveButton.X, self.leaveButton.Y))

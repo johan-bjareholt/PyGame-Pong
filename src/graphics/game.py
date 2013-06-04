@@ -128,7 +128,7 @@ class Game:
     def surfaceLoad(self):
 
         self.leftBrick = self.Brick(30)
-        self.rightBrick = self.Brick(1150)
+        self.rightBrick = self.Brick(self.screensize[0]-50)
         self.brickRects = [self.rightBrick, self.leftBrick]
         self.pauseMenu = widgets.PauseMenu()
 

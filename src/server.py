@@ -163,7 +163,7 @@ class Client(threading.Thread):
         logging.info("{} logged in".format(self.username))
 
     def sendTcpData(self, action, value="None"):
-        message = "{}|{}".format("tcp." + action, value)
+        message = "{}|{};".format("tcp." + action, value)
         try:
             self.conn.send(message)
         except Exception as e:
@@ -176,7 +176,7 @@ class Client(threading.Thread):
 
     def sendUdpData(self, action, value="None"):
         address = clients[self.username].udp_address
-        message = "{}|{}".format("udp." + action, value)
+        message = "{}|{};".format("udp." + action, value)
         udp.sock.sendto(message, address)
         logging.debug('UDP: Client:{} - sent:{}'.format(self.username, message))
 

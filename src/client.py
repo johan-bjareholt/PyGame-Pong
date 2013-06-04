@@ -397,13 +397,15 @@ class Networking():
             while main.loggedin and main.running and self.running:
                 # Recv action
                 recv_data = self.socket.recv(2048)
-                data = recv_data.split('|')
-                netlog.debug("TCP:Got: " + recv_data)
+                if recv_data:
+                    netlog.debug("TCP:Got: " + recv_data)
 
-                # Message Handler
-                response = net.msghandler.handle(data)
-                if response:
-                    self.sendData(response)
+                    # Message Handler
+                    for message in recv_data.split(';'):
+                        data = message.split('|')
+                        response = net.msghandler.handle(data)
+                        if response:
+                            self.sendData(response)
 
             self.socket.close()
 
@@ -429,13 +431,15 @@ class Networking():
             main.mode = "multiplayer"
             while main.running:
                 recv_data, addr = self.socket.recvfrom(2048)
-                data = recv_data.split('|')
-                netlog.debug("UDP:Got: " + recv_data)
+                if recv_data:
+                    netlog.debug("UDP:Got: " + recv_data)
 
-                # Message Handler
-                response = net.msghandler.handle(data)
-                if response:
-                    self.sendData(response)
+                    # Message Handler
+                    for message in recv_data.split(';'):
+                        data = message.split('|')
+                        response = net.msghandler.handle(data)
+                        if response:
+                            self.sendData(response)
 
         def sendData(self, action, data=" "):
             data = "{user}|{action}|{data};".format(user=user, action="udp."+action, data=data)
