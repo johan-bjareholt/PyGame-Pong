@@ -130,6 +130,11 @@ class Graphics():
     class Menu:
         def __init__(self, parent):
             gfx.screen = parent
+
+            self.menus = {}
+            for menu in ["main", "multiplayer", "login", "loginConnect"]:
+                self.menus[menu] = {'loaded': False}
+
             self.location = "main"
 
         def surfaceLoad(self):
@@ -142,31 +147,35 @@ class Graphics():
 
             # Main menu
             if self.location == "main":
-                try:
+                if self.menus[self.location]['loaded']:
                     self.mainmenu.update()
-                except AttributeError:
+                else:
                     self.mainmenu = menus.MainMenu(gfx.screen, username=user)
+                    self.menus[self.location]['loaded'] = True
 
             # Multiplayer logged in screen for joining games
             elif self.location == "multiplayer":
-                try:
+                if self.menus[self.location]['loaded']:
                     self.multiplayermenu.update()
-                except AttributeError:
+                else:
                     self.multiplayermenu = menus.MultiplayerMenu(gfx.screen, "main", username=user)
+                    self.menus[self.location]['loaded'] = True
 
             # Login prompt
             elif self.location == "login":
-                try:
+                if self.menus[self.location]['loaded']:
                     self.loginmenu.update()
-                except AttributeError:
+                else:
                     self.loginmenu = menus.LoginMenu(gfx.screen, "main", username=user)
+                    self.menus[self.location]['loaded'] = True
 
             # Logging in and connecting to server load menu
             elif self.location == "loginConnect":
-                try:
+                if self.menus[self.location]['loaded']:
                     self.loginconnectmenu.update()
-                except AttributeError:
+                else:
                     self.loginconnectmenu = menus.LoadingMenu(gfx.screen, "main", username=user)
+                    self.menus[self.location]['loaded'] = True
 
     def newFrame(self):
         main.clock.tick(60)

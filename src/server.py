@@ -8,7 +8,12 @@ import yaml
 import base64
 import sqlite3
 
-logging.root.setLevel(logging.DEBUG)
+
+logging.basicConfig()
+logger = logging.getLogger('main')
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 gameid = 0
 
@@ -61,7 +66,7 @@ class Database():
         #self.createTable()
         #self.addUser('Johan2', "asdasd")
         #self.getUser("Johan2")
-        #logging.info(self.getUser("Johan2")[1])
+        #logger.info(self.getUser("Johan2")[1])
 
     def createTable(self):
         self.cursor.execute('''CREATE TABLE users
@@ -96,7 +101,7 @@ class Games(dict):
             string += "\nGameID:{id} | P1:{P1} | P2:{P2}".format(id=str(games[game].id),
                                                                  P1=games[game].player1.username,
                                                                  P2=games[game].player2.username)
-        logging.info(string)
+        logger.info(string)
 
     def newGame(self, game_id):
         self[str(game_id)] = Game()
@@ -104,7 +109,7 @@ class Games(dict):
     def removeGame(self, game_id):
         self[str(game_id)] = None
         del self[str(game_id)]
-        logging.info("Game {id} removed".format(id=game_id))
+        logger.info("Game {id} removed".format(id=game_id))
 
 
 class Clients(dict):
@@ -137,17 +142,16 @@ class Client(threading.Thread):
             if data:
                 for msg in data.split(';'):
                     if msg:
-                        logging.debug('TCP: Client:Unathenticated - Got:{}'.format(data))
+                        logger.debug('TCP: Client:Unathenticated - Got:{}'.format(data))
                         self.username, action, value = str(data).split('|')
                         action = action.split('.')
                         msghandler.authentication(self.username, action, value, self)
         # The rest
         while self.connected and self.loggedin:
             data = self.conn.recv(2048)
-            if data:
-                response = msghandler.handle(data, self.address)
-                if response:
-                    self.conn.send(response)
+            for command in data.split(';'):
+                if data:
+                    msghandler.handle(command, self.address)
         self.conn.close()
 
     def joinGame(self, username, game, playernum):
@@ -160,25 +164,25 @@ class Client(threading.Thread):
         clients.addClient(self)
         self.password = password
         self.loggedin = True
-        logging.info("{} logged in".format(self.username))
+        logger.info("{} logged in".format(self.username))
 
     def sendTcpData(self, action, value="None"):
         message = "{}|{};".format("tcp." + action, value)
         try:
             self.conn.send(message)
         except Exception as e:
-            logging.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
 
         try:
-            logging.debug('TCP: Client:{} - Sent:{}'.format(self.username, message))
+            logger.debug('TCP: Client:{} - Sent:{}'.format(self.username, message))
         except AttributeError:
-            logging.debug('TCP: Client:{} - Sent:{}'.format(self.address, message))
+            logger.debug('TCP: Client:{} - Sent:{}'.format(self.address, message))
 
     def sendUdpData(self, action, value="None"):
         address = clients[self.username].udp_address
         message = "{}|{};".format("udp." + action, value)
         udp.sock.sendto(message, address)
-        logging.debug('UDP: Client:{} - sent:{}'.format(self.username, message))
+        logger.debug('UDP: Client:{} - sent:{}'.format(self.username, message))
 
 
 class TcpHandler(threading.Thread):
@@ -191,7 +195,7 @@ class TcpHandler(threading.Thread):
 
         # Bind the socket to the port
         self.server_address = (main.settings['ip'], main.settings['port'])
-        logging.info('starting up on %s port %s' % self.server_address)
+        logger.info('Starting up TCP on {}:{}'.format(self.server_address[0], self.server_address[1]))
         self.sock.bind(self.server_address)
 
     def run(self):
@@ -200,7 +204,7 @@ class TcpHandler(threading.Thread):
         while True:
             # Accepting new connections
             conn, address = self.sock.accept()
-            logging.info('Client {} connected!'.format(address))
+            logger.info('Client {} connected!'.format(address))
             Client(conn, address)
 
 
@@ -214,18 +218,18 @@ class UdpHandler(threading.Thread):
 
         # Bind the socket to the port
         self.server_address = (main.settings['ip'], main.settings['port'])
-        logging.info('starting up on %s port %s' % self.server_address)
+        logger.info('Starting up UDP on {}:{}'.format(self.server_address[0], self.server_address[1]))
         self.sock.bind(self.server_address)
 
     def run(self):
         while True:
             data, address = self.sock.recvfrom(4096)
-            logging.debug(str(data) + ", " + str(address))
+            logger.debug(str(data) + ", " + str(address))
 
-            logging.debug('UDP: Client:{} - Got:{}'.format(address, data))
+            logger.debug('UDP: Client:{} - Got:{}'.format(address, data))
 
             message = msghandler.handle(data, address)
-            logging.debug(message)
+            logger.debug(message)
 
 
 class MessageHandler():
@@ -234,7 +238,7 @@ class MessageHandler():
             for data in data.split(';'):
                 user, action, data = data.split('|')
                 action = action.split('.')
-                logging.debug("{}|{}|{}".format(user, action, data))
+                logger.debug("{}|{}|{}".format(user, action, data))
                 try:
                     if action[1] == "general":
                         return self.general(user, action, data, address)
@@ -243,11 +247,11 @@ class MessageHandler():
                     elif action[1] == "lobby":
                         return self.lobby(user, action, data, address)
                     else:
-                        logging.debug("invalid request: {}|{}|{}".format(user, action, data))
+                        logger.debug("invalid request: {}|{}|{}".format(user, action, data))
                 except Exception as e:
-                    logging.error("{error} \n From: {adress}".format(error=e, adress=str(address)), exc_info=True)
+                    logger.error("{error} \n From: {adress}".format(error=e, adress=str(address)), exc_info=True)
         except Exception as e:
-            logging.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
             return False
 
     def general(self, user, action, data, address):
@@ -274,13 +278,13 @@ class MessageHandler():
     def lobby(self, username, action, data, address):
         if action[2] == "logout":
             clients[username].connected = False
-            logging.info("{} logged out".format(username))
+            logger.info("{} logged out".format(username))
         if action[2] == "quickFind":
             global gameid, playerlist, games
             try:
                 # Try to join game
                 game = games[str(gameid)]
-                logging.info("{user} just joined a game!")
+                logger.info("{user} just joined a game!")
                 # Cleanup needed here
                 clients[username].joinGame(username, game, 2)
                 game.player2 = clients[username]
@@ -297,30 +301,28 @@ class MessageHandler():
                     # Start game
                     game.start()
 
-                    logging.info("{user} with address {address} just created a game!".format(user=username, address=address))
+                    logger.info("{user} from {address} just created a game!".format(user=username, address=address))
                 except Exception as e:
-                    logging.error("Could not create game :( \n{error}".format(error=e), exc_info=True)
+                    logger.error("Could not create game :( \n{error}".format(error=e), exc_info=True)
 
             else:
                 game = None
-            #return "get.game.msg|hejhej"
 
     def authentication(self, username, action, data, client):
         if action[2] == "login":
-            try:
-                userinfo = db.getUser(username)
-                if userinfo:
-                    password = base64.b64decode(data)
-                    hashed_password = clients.hashPassword(password)
-                    correct_password = userinfo[1]
-                    logging.info(correct_password)
-                    if hashed_password == correct_password:
-                        client.login(hashed_password)
-                        client.sendTcpData("lobby.login", "True,{}".format(hashed_password))
-                        logging.info("{} logged in!".format(username))
-                    else:
-                        client.sendTcpData("lobby.login", "False,{}".format("Invalid password"))
-            except KeyError:
+            userinfo = db.getUser(username)
+            if userinfo:
+                password = base64.b64decode(data)
+                hashed_password = clients.hashPassword(password)
+                correct_password = userinfo[1]
+                logger.info(correct_password)
+                if hashed_password == correct_password:
+                    client.login(hashed_password)
+                    client.sendTcpData("lobby.login", "True,{}".format(hashed_password))
+                    logger.info("{} logged in!".format(username))
+                else:
+                    client.sendTcpData("lobby.login", "False,{}".format("Invalid password"))
+            else:
                 client.sendTcpData("lobby.login", "False,{}".format("Invalid username"))
         if action[2] == "register":
             # Password section
@@ -330,12 +332,12 @@ class MessageHandler():
             # return registration
             client.sendTcpData("lobby.register", "True")
             db.createUser(username, hashed_password)
-            logging.info("{} just got registered!")
+            logger.info("{} just got registered!")
             client.sendTcpData("lobby.login", "True,{}".format(hashed_password))
             client.login(hashed_password)
         if action[2] == "logout":
             client.connected = False
-            logging.info("{} closed the connection".format(client.username))
+            logger.info("{} closed the connection".format(client.username))
 
 
 class Game(threading.Thread):
@@ -368,31 +370,43 @@ class Game(threading.Thread):
 
     def run(self):
         # First player joined!
-        self.player1.sendTcpData("game.msg", "Searching for player")
         self.player1.sendTcpData("game.playerslot", "1")
+        self.player1.sendTcpData("game.msg", "Searching for player")
+
         # Searching for second player
         while not self.player2:
             time.sleep(0.5)
+
         # Player found!
         self.player2.sendTcpData("game.playerslot", "2")
-        logging.info(games.pprint())
+        logger.info(games.pprint())
+
+        # Countdown
         for s in range(5):
-            # Countdown
-            self.player1.sendTcpData("game.msg", "Player found! Game starts in {} seconds".format(str(5-s)))
-            self.player2.sendTcpData("game.msg", "Player found! Game starts in {} seconds".format(str(5-s)))
-            time.sleep(1)
-        self.player1.sendTcpData("game.msg", "")
-        self.player2.sendTcpData("game.msg", "")
+            self.send('tcp', "game.msg", "Player found! Game starts in {} seconds".format(str(5-s)))
+        self.send('tcp', "game.msg", "")
+
         # Game starts!
+        timer = self.Timer()
         while self.pointsP1 < 10 and self.pointsP2 < 10:
+            timer.start()
+
             self.eventList()
             self.sendPads()
-            time.sleep(0.01)
+
+            timer.join()
+
         # Game over
-        self.player1.sendTcpData("game.msg", "Game over!")
-        self.player2.sendTcpData("game.msg", "Game over!")
+        self.send('tcp', "game.msg", "Game over!")
         time.sleep(30)
         games.removeGame(self.id)
+
+    class Timer(threading.Thread):
+        def __init__(self):
+            threading.Thread.__init__(self)
+
+        def run():
+            time.sleep(100)
 
     def sendPads(self):
         # Ball
@@ -444,7 +458,7 @@ class Game(threading.Thread):
             self.pointsP2 += 1
             self.player1.sendTcpData("game.score", "{},{}".format(str(self.pointsP1), str(self.pointsP2)))
             self.player2.sendTcpData("game.score", "{},{}".format(str(self.pointsP1), str(self.pointsP2)))
-            logging.info("Score! Going right: " + str(self.ballGoingRight))
+            logger.info("Score! Going right: " + str(self.ballGoingRight))
         elif self.ballX > 1200:
             self.ballX = 600
             self.ballY = 335
@@ -452,7 +466,17 @@ class Game(threading.Thread):
             self.pointsP1 += 1
             self.player1.sendTcpData("game.score", "{},{}".format(str(self.pointsP1), str(self.pointsP2)))
             self.player2.sendTcpData("game.score", "{},{}".format(str(self.pointsP1), str(self.pointsP2)))
-            logging.info("Score! Going right: " + str(self.ballGoingRight))
+            logger.info("Score! Going right: " + str(self.ballGoingRight))
+
+    def send(protocol, method, value=None):
+        players = [self.player1, self.player2]
+        if protocol == 'udp':
+            for player in players:
+                player.sendUdpData(method, value)
+        elif protocol == 'tcp':
+            for player in players:
+                player.sendTcpData(method, value)
+
 
 if __name__ == '__main__':
     db = Database()
